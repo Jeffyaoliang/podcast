@@ -1,6 +1,6 @@
-# 小宇宙 Web 应用
+# DreamEcho Web 应用
 
-基于 [xyz](https://github.com/ultrazg/xyz) API 构建的现代化小宇宙播客 Web 应用。
+基于 [xyz](https://github.com/ultrazg/xyz) API 构建的现代化播客 Web 应用。
 
 ## 功能特性
 
@@ -83,6 +83,11 @@ src/
 - 需要先运行 [xyz](https://github.com/ultrazg/xyz) API 服务
 - 登录功能可能已失效（参考 xyz 项目说明）
 - 请遵守相关法律法规和平台使用条款
+
+## 创作者
+
+- [@jeffyaoliang](https://github.com/jeffyaoliang)
+- [@amyxiang12](https://github.com/amyxiang12)
 
 ## 许可证
 
