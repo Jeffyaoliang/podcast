@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f8f9fa;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* 单集描述样式 */
+.episode-description {
+  line-height: 1.8;
+  word-break: break-word;
+}
+
+.episode-description p {
+  margin-bottom: 1em;
+  line-height: 1.8;
+}
+
+
+.episode-description a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.episode-description a:hover {
+  text-decoration: underline;
+}
+
+.episode-description ul,
+.episode-description ol {
+  margin: 1em 0;
+  padding-left: 2em;
+}
+
+.episode-description li {
+  margin: 0.5em 0;
+  line-height: 1.8;
+}
+
+.episode-description img {
+  max-width: 100%;
+  height: auto;
+  margin: 1em 0;
+}
+
+.episode-description strong,
+.episode-description b {
+  font-weight: 600;
+}
+
+.episode-description em,
+.episode-description i {
+  font-style: italic;
+}
+
+/* 单集列表中的描述样式（限制显示2行） */
+.episode-description-list {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+  line-height: 1.5;
+}
+
+.episode-description-list p {
+  margin-bottom: 0.5em;
+  display: inline;
+}
+
+.episode-description-list p:last-child {
+  margin-bottom: 0;
+}
+
+.episode-description-list br {
+  display: none;
+}
+
+/* 温和淡出动画 */
+@keyframes fadeProgress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
