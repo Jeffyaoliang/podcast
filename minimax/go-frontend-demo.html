@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DreamEcho - 播客</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f8f9fa;
+      color: #1a1a1a;
+      min-height: 100vh;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      color: white;
+      padding: 60px 24px 80px;
+      position: relative;
+    }
+    
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    
+    .header p {
+      font-size: 1rem;
+      opacity: 0.9;
+    }
+    
+    .status-badge {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .status-badge.connected {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .status-badge.disconnected {
+      background: rgba(239, 68, 68, 0.9);
+    }
+    
+    .main-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      margin-top: -50px;
+    }
+    
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .search-box {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .search-input {
+      flex: 1;
+      padding: 14px 18px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+    
+    .search-input:focus {
+      outline: none;
+      border-color: #6366f1;
+    }
+    
+    .btn {
+      padding: 14px 28px;
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      white-space: nowrap;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+    
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #6b7280;
+    }
+    
+    .spinner {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border: 3px solid #e5e7eb;
+      border-top: 3px solid #6366f1;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .podcast-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 20px;
+    }
+    
+    .podcast-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+    }
+    
+    .podcast-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+    
+    .podcast-cover-wrapper {
+      position: relative;
+      aspect-ratio: 1;
+      overflow: hidden;
+    }
+    
+    .podcast-cover {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s;
+    }
+    
+    .podcast-card:hover .podcast-cover {
+      transform: scale(1.05);
+    }
+    
+    .podcast-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    
+    .podcast-card:hover .podcast-overlay {
+      opacity: 1;
+    }
+    
+    .play-icon {
+      width: 48px;
+      height: 48px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6366f1;
+    }
+    
+    .podcast-placeholder {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      color: #6366f1;
+    }
+    
+    .podcast-info {
+      padding: 14px;
+    }
+    
+    .podcast-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 6px;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    .podcast-desc {
+      font-size: 0.8rem;
+      color: #6b7280;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    .btn-detail {
+      margin-top: 12px;
+      width: 100%;
+      padding: 10px;
+      background: #f3f4f6;
+      color: #374151;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .btn-detail:hover {
+      background: #e5e7eb;
+    }
+    
+    .episode-list {
+      margin-top: 20px;
+    }
+    
+    .episode-card {
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    
+    .episode-title {
+      font-weight: 600;
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+    
+    .episode-meta {
+      display: flex;
+      gap: 16px;
+      font-size: 0.85rem;
+      color: #6b7280;
+      margin-bottom: 12px;
+    }
+    
+    .episode-meta span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    audio {
+      width: 100%;
+      border-radius: 8px;
+      margin-top: 8px;
+    }
+    
+    .error {
+      background: #fef2f2;
+      color: #dc2626;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .success {
+      background: #f0fdf4;
+      color: #16a34a;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .backend-info {
+      background: #f0f9ff;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: #0369a1;
+      margin-bottom: 16px;
+      font-family: monospace;
+    }
+    
+    .divider {
+      height: 1px;
+      background: #e5e7eb;
+      margin: 24px 0;
+    }
+    
+    .tag {
+      display: inline-block;
+      padding: 4px 10px;
+      background: #e0e7ff;
+      color: #4338ca;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  <!-- 顶部导航 -->
+  <div class="header">
+    <div class="header-content">
+      <h1>🎙️ DreamEcho</h1>
+      <p>Go 后端 API 演示</p>
+    </div>
+    <div id="statusBadge" class="status-badge disconnected">
+      <span>🔴</span>
+      <span id="statusText">正在连接...</span>
+    </div>
+  </div>
+  
+  <div class="main-container">
+    <!-- 热门播客 -->
+    <div class="card">
+      <h2 class="section-title">🔥 热门播客</h2>
+      <div class="backend-info">
+        后端地址: <span id="backendUrl">http://localhost:8080</span>
+      </div>
+      <div id="popularPodcasts" class="podcast-grid">
+        <div class="loading"><span class="spinner"></span>加载中...</div>
+      </div>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <!-- 搜索 -->
+    <div class="card">
+      <h2 class="section-title">🔍 搜索播客</h2>
+      <div class="search-box">
+        <input type="text" class="search-input" id="searchInput" placeholder="输入播客名称，如：内核恐慌、Teahour、日谈公园">
+        <button class="btn" id="searchBtn" onclick="search()">搜索</button>
+      </div>
+      <div id="searchResults"></div>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <!-- 解析 RSS -->
+    <div class="card">
+      <h2 class="section-title">📻 解析播客 RSS</h2>
+      <div class="search-box">
+        <input type="text" class="search-input" id="rssInput" placeholder="输入 RSS URL，如：https://pan.icu/feed">
+        <button class="btn" id="parseBtn" onclick="parseRSS()">解析</button>
+      </div>
+      <div id="parseResults"></div>
+    </div>
+  </div>
+
+  <script>
+    // 配置
+    const BACKEND_URL = 'http://localhost:8080';
+    
+    // 热门播客列表
+    const POPULAR_FEEDS = [
+      { title: '内核恐慌', rssUrl: 'https://pan.icu/feed', description: '一档号称硬核却没什么干货的信息技术主题娱乐节目' },
+      { title: 'Teahour', rssUrl: 'https://feeds.fireside.fm/teahour/rss', description: '聚焦于程序、创业以及一切 Geek 话题的中文播客' },
+      { title: '日谈公园', rssUrl: 'https://www.rituantan.com/feed', description: '希望可以为听众朋友们提供绝佳的收听体验' },
+      { title: '故事FM', rssUrl: 'https://storyfm.cn/feed', description: '每个人都可以成为主角' },
+      { title: '博物志', rssUrl: 'https://bowuzhi.fm/feed', description: '一档关于博物馆、艺术、科技、自然的泛文化播客' },
+      { title: '疯投圈', rssUrl: 'https://zhubi.app/feed/3XFKy8', description: '一档关于创业投资的播客' },
+    ];
+    
+    // 获取播客首字母作为占位符
+    function getFirstChar(title) {
+      return title.charAt(0).toUpperCase();
+    }
+    
+    // 获取占位图
+    function getPlaceholder(title, bgColor = 'e0e7ff') {
+      return `https://ui-avatars.com/api/?name=${encodeURIComponent(title)}&background=${bgColor}&color=4338ca&size=200&bold=true&font-size=0.4&length=2`;
+    }
+    
+    // 检查后端连接
+    async function checkBackend() {
+      const statusBadge = document.getElementById('statusBadge');
+      const statusText = document.getElementById('statusText');
+      const backendUrlEl = document.getElementById('backendUrl');
+      
+      backendUrlEl.textContent = BACKEND_URL;
+      
+      try {
+        // 尝试调用 feed API 作为测试
+        const testUrl = 'https://pan.icu/feed';
+        const response = await fetch(`${BACKEND_URL}/api/feed?url=${encodeURIComponent(testUrl)}`);
+        
+        if (response.ok) {
+          statusBadge.className = 'status-badge connected';
+          statusBadge.innerHTML = '<span>🟢</span><span>后端已连接</span>';
+          return true;
+        }
+      } catch (error) {
+        console.log('连接失败:', error);
+      }
+      
+      statusBadge.className = 'status-badge disconnected';
+      statusBadge.innerHTML = '<span>🔴</span><span>后端未连接</span>';
+      return false;
+    }
+    
+    // 加载热门播客
+    async function loadPopularPodcasts() {
+      const container = document.getElementById('popularPodcasts');
+      
+      container.innerHTML = POPULAR_FEEDS.map(feed => `
+        <div class="podcast-card" onclick="loadPodcast('${encodeURIComponent(feed.rssUrl)}', '${encodeURIComponent(feed.title)}')">
+          <div class="podcast-cover-wrapper">
+            <div class="podcast-placeholder">${getFirstChar(feed.title)}</div>
+            <div class="podcast-overlay">
+              <div class="play-icon">▶</div>
+            </div>
+          </div>
+          <div class="podcast-info">
+            <div class="podcast-title">${feed.title}</div>
+            <div class="podcast-desc">${feed.description}</div>
+            <button class="btn-detail">查看详情</button>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    // 加载播客详情
+    async function loadPodcast(rssUrl, title) {
+      const parseResults = document.getElementById('parseResults');
+      parseResults.innerHTML = '<div class="loading"><span class="spinner"></span>加载中...</div>';
+      
+      // 填充 RSS URL
+      document.getElementById('rssInput').value = decodeURIComponent(rssUrl);
+      
+      // 滚动到解析区域
+      parseResults.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      
+      await parseRSS();
+    }
+    
+    // 搜索播客
+    async function search() {
+      const keyword = document.getElementById('searchInput').value.trim();
+      const resultsEl = document.getElementById('searchResults');
+      const searchBtn = document.getElementById('searchBtn');
+      
+      if (!keyword) {
+        resultsEl.innerHTML = '<div class="error">请输入搜索关键词</div>';
+        return;
+      }
+      
+      searchBtn.disabled = true;
+      searchBtn.innerHTML = '<span class="spinner"></span>搜索中...';
+      resultsEl.innerHTML = '<div class="loading"><span class="spinner"></span>正在搜索...</div>';
+      
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/feed?url=${encodeURIComponent(keyword)}`);
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        resultsEl.innerHTML = `
+          <div class="success">✅ 找到播客: ${data.title}</div>
+          <div class="podcast-grid">
+            <div class="podcast-card" onclick="showEpisodes('${encodeURIComponent(keyword)}')">
+              <div class="podcast-cover-wrapper">
+                <img class="podcast-cover" src="${data.image || getPlaceholder(data.title)}" 
+                     onerror="this.parentElement.innerHTML='<div class=\\'podcast-placeholder\\'>${getFirstChar(data.title)}</div>'">
+                <div class="podcast-overlay">
+                  <div class="play-icon">▶</div>
+                </div>
+              </div>
+              <div class="podcast-info">
+                <div class="podcast-title">${data.title}</div>
+                <div class="podcast-desc">${data.description || '暂无描述'}</div>
+                <button class="btn-detail">查看 ${data.episodes?.length || 0} 集</button>
+              </div>
+            </div>
+          </div>
+          <div class="episode-list" id="episodeList"></div>
+        `;
+      } catch (error) {
+        resultsEl.innerHTML = `<div class="error">❌ ${error.message}</div>`;
+      } finally {
+        searchBtn.disabled = false;
+        searchBtn.innerHTML = '搜索';
+      }
+    }
+    
+    // 显示单集列表
+    async function showEpisodes(rssUrl) {
+      const url = decodeURIComponent(rssUrl);
+      const episodeList = document.getElementById('episodeList');
+      
+      if (!url) {
+        episodeList.innerHTML = '<div class="error">请先输入 RSS URL</div>';
+        return;
+      }
+      
+      episodeList.innerHTML = '<div class="loading"><span class="spinner"></span>加载单集...</div>';
+      
+      // 滚动到单集区域
+      episodeList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/feed?url=${encodeURIComponent(url)}`);
+        const data = await response.json();
+        
+        if (data.episodes && data.episodes.length > 0) {
+          episodeList.innerHTML = `
+            <h4 style="margin-bottom: 16px;">📰 ${data.title} - 单集列表</h4>
+            ${data.episodes.map((episode, index) => `
+              <div class="episode-card">
+                <div class="episode-title">${index + 1}. ${episode.title}</div>
+                <div class="episode-meta">
+                  <span>⏱️ ${episode.duration || '未知时长'}</span>
+                  <span>📅 ${episode.pubDate || '未知日期'}</span>
+                </div>
+                ${episode.audioUrl ? `
+                  <audio controls>
+                    <source src="http://localhost:8080/api/proxy/audio?url=${encodeURIComponent(episode.audioUrl)}" type="audio/mpeg">
+                    您的浏览器不支持音频播放
+                  </audio>
+                  <p style="font-size: 0.75rem; color: #6b7280; margin-top: 8px;">
+                    <a href="${episode.audioUrl}" target="_blank" style="color: #6366f1;">原始链接</a>
+                  </p>
+                ` : '<p style="color: #dc2626; font-size: 0.9rem;">⚠️ 无音频链接</p>'}
+              </div>
+            `).join('')}
+          `;
+        } else {
+          episodeList.innerHTML = '<div class="error">暂无数集</div>';
+        }
+      } catch (error) {
+        episodeList.innerHTML = `<div class="error">加载失败: ${error.message}</div>`;
+      }
+    }
+    
+    // 解析 RSS
+    async function parseRSS() {
+      const rssUrl = document.getElementById('rssInput').value.trim();
+      const resultsEl = document.getElementById('parseResults');
+      const parseBtn = document.getElementById('parseBtn');
+      
+      if (!rssUrl) {
+        resultsEl.innerHTML = '<div class="error">请输入 RSS URL</div>';
+        return;
+      }
+      
+      parseBtn.disabled = true;
+      parseBtn.innerHTML = '<span class="spinner"></span>解析中...';
+      resultsEl.innerHTML = '<div class="loading"><span class="spinner"></span>正在解析...</div>';
+      
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/feed?url=${encodeURIComponent(rssUrl)}`);
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        resultsEl.innerHTML = `
+          <div style="display: flex; gap: 20px; margin-bottom: 24px;">
+            <img style="width: 120px; height: 120px; border-radius: 12px; object-fit: cover;" src="${data.image || getPlaceholder(data.title)}" 
+                 onerror="this.style.display='none'">
+            <div>
+              <h3 style="font-size: 1.3rem; margin-bottom: 10px;">${data.title}</h3>
+              <p style="color: #6b7280; font-size: 0.9rem; line-height: 1.6;">${data.description || '暂无描述'}</p>
+              <div style="margin-top: 12px;">
+                ${data.episodes?.slice(0, 3).map(e => `<span class="tag">${e.title.substring(0, 15)}...</span>`).join('') || ''}
+              </div>
+            </div>
+          </div>
+          
+          <h4 style="margin-bottom: 16px;">📰 共 ${data.episodes?.length || 0} 集</h4>
+          <div class="episode-list">
+            ${data.episodes?.slice(0, 5).map((episode, index) => `
+              <div class="episode-card">
+                <div class="episode-title">${index + 1}. ${episode.title}</div>
+                <div class="episode-meta">
+                  <span>⏱️ ${episode.duration || '未知时长'}</span>
+                  <span>📅 ${episode.pubDate || '未知日期'}</span>
+                </div>
+                ${episode.audioUrl ? `
+                  <audio controls>
+                    <source src="http://localhost:8080/api/proxy/audio?url=${encodeURIComponent(episode.audioUrl)}" type="audio/mpeg">
+                    您的浏览器不支持音频播放
+                  </audio>
+                ` : ''}
+              </div>
+            `).join('') || '<p>暂无数集</p>'}
+            ${data.episodes && data.episodes.length > 5 ? `
+              <p style="text-align: center; color: #6b7280; margin-top: 16px;">
+                还有 ${data.episodes.length - 5} 集未显示...
+              </p>
+            ` : ''}
+          </div>
+        `;
+      } catch (error) {
+        resultsEl.innerHTML = `<div class="error">❌ ${error.message}</div>`;
+      } finally {
+        parseBtn.disabled = false;
+        parseBtn.innerHTML = '解析';
+      }
+    }
+    
+    // 初始化
+    window.onload = async () => {
+      document.getElementById('backendUrl').textContent = BACKEND_URL;
+      await checkBackend();
+      loadPopularPodcasts();
+    };
+  </script>
+</body>
+</html>

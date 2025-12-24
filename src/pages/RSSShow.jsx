@@ -1,9 +1,10 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { Play, Clock, Rss, Plus, Check, ExternalLink, Moon } from 'lucide-react'
+import { Play, Clock, Rss, Plus, Check, ExternalLink, Moon, X } from 'lucide-react'
 import { parseRSS } from '../services/rssService'
 import useRSSStore from '../store/rssStore'
 import useHistoryStore from '../store/historyStore'
+import AudioSpectrum from '../components/AudioSpectrum'
 
 export default function RSSShow() {
   const { rssUrl: encodedRssUrl, episodeId: encodedEpisodeId } = useParams()
@@ -14,7 +15,7 @@ export default function RSSShow() {
   const [error, setError] = useState(null)
   const loadingRef = useRef(false) // 防止重复请求
   const loadedRssUrlRef = useRef(null) // 记录已加载的RSS URL
-  const { subscriptions, addSubscription, removeSubscription, addRecentFeed } = useRSSStore()
+  const { subscriptions, addSubscription, removeSubscription, addRecentFeed, addToBlacklist, isBlacklisted, removeFromBlacklist } = useRSSStore()
   const { addRecord, getRecordByEpisode } = useHistoryStore()
   const audioRef = useRef(null)
   const lastUpdateTimeRef = useRef(0)
@@ -24,6 +25,7 @@ export default function RSSShow() {
   const originalVolumeRef = useRef(1.0) // 保存原始音量
   const [isFading, setIsFading] = useState(false) // 淡出状态（用于UI更新）
   const [fadeProgress, setFadeProgress] = useState(0) // 淡出进度（0-100）
+  const [showSpectrum, setShowSpectrum] = useState(false) // 是否显示频谱
 
   const isSubscribed = rssUrl ? subscriptions.some(sub => sub.rssUrl === rssUrl) : false
   
@@ -82,18 +84,27 @@ export default function RSSShow() {
 
   // 当单集变化时，主动预加载音频以缩短缓冲时间
   useEffect(() => {
-    if (currentEpisode && currentEpisode.audioUrl && audioRef.current) {
-      const audio = audioRef.current
-      // 主动触发加载，开始预加载音频数据（preload="auto" 配合 load() 可以更快开始缓冲）
-      // 注意：audio 元素的 src 已经通过 source 标签设置，这里只需要触发 load()
-      try {
-        audio.load()
-      } catch (error) {
-        // 忽略加载错误（可能因为音频URL还未完全准备好）
-        if (import.meta.env.DEV) {
-          console.log('预加载音频:', error)
+    if (currentEpisode && currentEpisode.audioUrl) {
+      // 等待 DOM 更新后再访问 audioRef
+      setTimeout(() => {
+        if (audioRef.current) {
+          const audio = audioRef.current
+          // 主动触发加载，开始预加载音频数据（preload="auto" 配合 load() 可以更快开始缓冲）
+          // 注意：audio 元素的 src 已经通过 source 标签设置，这里只需要触发 load()
+          try {
+            audio.load()
+            // 音频元素已加载，允许显示频谱
+            setShowSpectrum(true)
+          } catch (error) {
+            // 忽略加载错误（可能因为音频URL还未完全准备好）
+            if (import.meta.env.DEV) {
+              console.log('预加载音频:', error)
+            }
+          }
         }
-      }
+      }, 100)
+    } else {
+      setShowSpectrum(false)
     }
   }, [currentEpisode?.audioUrl, currentEpisode?.id])
 
@@ -206,7 +217,8 @@ export default function RSSShow() {
           playedDuration: Math.floor(audio.currentTime || 0),
           episodeUrl: currentEpisode.audioUrl || currentEpisode.link,
           coverImage: currentEpisode.image || podcast.image,
-          description: currentEpisode.description || '',
+          // 优先使用单集描述，如果没有则使用播客描述（这样搜索时可以搜索到播客级别的关键词）
+          description: currentEpisode.description || podcast.description || '',
           rssUrl: rssUrl || '',
           episodeId: currentEpisode.id || ''
         })
@@ -229,7 +241,8 @@ export default function RSSShow() {
           playedDuration: Math.floor(audio.currentTime || 0),
           episodeUrl: currentEpisode.audioUrl || currentEpisode.link,
           coverImage: currentEpisode.image || podcast.image,
-          description: currentEpisode.description || '',
+          // 优先使用单集描述，如果没有则使用播客描述（这样搜索时可以搜索到播客级别的关键词）
+          description: currentEpisode.description || podcast.description || '',
           rssUrl: rssUrl || '',
           episodeId: currentEpisode.id || ''
         })
@@ -248,7 +261,8 @@ export default function RSSShow() {
           playedDuration: Math.floor(audio.duration || 0),
           episodeUrl: currentEpisode.audioUrl || currentEpisode.link,
           coverImage: currentEpisode.image || podcast.image,
-          description: currentEpisode.description || '',
+          // 优先使用单集描述，如果没有则使用播客描述（这样搜索时可以搜索到播客级别的关键词）
+          description: currentEpisode.description || podcast.description || '',
           rssUrl: rssUrl || '',
           episodeId: currentEpisode.id || ''
         })
@@ -348,6 +362,18 @@ export default function RSSShow() {
       })
       alert('订阅成功！')
     }
+  }
+
+  const handleBlacklist = () => {
+    if (podcast && confirm(`确定要拉黑"${podcast.title}"吗？拉黑后该播客将不再出现在列表中。`)) {
+      addToBlacklist(rssUrl)
+      alert('已拉黑该播客')
+    }
+  }
+
+  const handleUnblacklist = () => {
+    removeFromBlacklist(rssUrl)
+    alert('已从黑名单移除')
   }
 
   const formatDuration = (seconds) => {
@@ -483,6 +509,9 @@ export default function RSSShow() {
           {/* 音频播放器（仅当有音频链接时显示） */}
           {currentEpisode.audioUrl && (
             <div className="mt-6 space-y-4">
+              {/* 音频频谱可视化 - 暂时禁用，避免影响音频播放 */}
+              {/* <AudioSpectrum audioElement={audioRef.current} isVisible={true} /> */}
+              
               <audio 
                 ref={audioRef}
                 controls 
@@ -620,6 +649,23 @@ export default function RSSShow() {
                   </>
                 )}
               </button>
+              {isBlacklisted(rssUrl) ? (
+                <button
+                  onClick={handleUnblacklist}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                  已拉黑（点击移除）
+                </button>
+              ) : (
+                <button
+                  onClick={handleBlacklist}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                  拉黑
+                </button>
+              )}
               {podcast.link && (
                 <a
                   href={podcast.link}

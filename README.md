@@ -1,99 +1,145 @@
-# DreamEcho Web 应用
+# DreamEcho 播客平台
 
-基于 [xyz](https://github.com/ultrazg/xyz) API 构建的现代化播客 Web 应用。
+DreamEcho 是一个现代化、功能完整的播客平台，支持多端访问和播放。本仓库采用多版本架构，包含两个独立的项目版本。
 
-## 功能特性
+## 📚 项目版本说明
 
-- 🎧 播客浏览和搜索
-- 📱 响应式设计，支持移动端和桌面端
-- 🔐 用户登录和认证
-- ⭐ 订阅管理
-- 💬 评论功能
-- 📊 热门榜单和推荐
-- 🎨 现代化 UI 设计
+本仓库包含两个版本的项目，它们共享相同的项目理念但在技术架构和功能范围上有所不同：
 
-## 技术栈
+### 基础版（主分支 main）
 
-- **前端框架**: React 18
-- **构建工具**: Vite
-- **路由**: React Router
-- **状态管理**: Zustand
-- **HTTP 客户端**: Axios
-- **样式**: Tailwind CSS
-- **图标**: Lucide React
+基础版是 DreamEcho 的初始版本，提供纯 Web 端的播客浏览和收听功能。该版本基于 React 前端构建，通过调用后端 API 提供完整的功能。基础版适合只需要 Web 端应用的用户，或者作为学习 React 开发的参考项目。
 
-## 安装
+### 升级版（minimax 分支或目录）
+
+升级版是 DreamEcho 的完整版本，在基础版的基础上进行了全面升级。新增了 Go 语言实现的高性能后端服务，以及 Kotlin + Jetpack Compose 构建的 Android 原生客户端。升级版提供了三端统一的播客平台体验，包括 Web 端、Android 端以及后端 API 服务。
+
+两个版本的主要区别体现在以下几个方面：技术架构上，基础版仅有 React 前端，而升级版包含 React 前端、Go 后端和 Android 客户端三部分；功能完整度上，升级版在基础版功能之上增加了 Android 原生应用体验、后台播放、系统通知栏控制等移动端特有功能；开发维护上，基础版结构简单适合快速迭代，升级版采用三端分离架构，便于团队协作和独立部署。
+
+## 🚀 快速开始
+
+### 基础版（当前分支）
+
+基础版的运行非常简单。首先克隆仓库并进入项目目录，然后安装依赖包，接着启动开发服务器即可访问应用。
 
 ```bash
+# 克隆仓库
+git clone https://github.com/Jeffyaoliang/podcast.git
+cd podcast
+
 # 安装依赖
 npm install
 
-# 或使用 yarn
-yarn install
-```
-
-## 配置
-
-1. 确保已运行 xyz API 服务（默认端口 23020）
-2. 如需修改 API 地址，创建 `.env` 文件：
-
-```env
-VITE_API_BASE_URL=http://localhost:23020
-```
-
-## 运行
-
-```bash
-# 开发模式
+# 启动开发服务器
 npm run dev
-
-# 构建生产版本
-npm run build
-
-# 预览生产版本
-npm run preview
 ```
 
-## 项目结构
+基础版需要配合 xyz API 服务使用，确保后端服务正常运行后再启动前端应用。
+
+### 升级版（minimax）
+
+升级版包含三个独立的项目，需要分别启动：
+
+前端部分的启动方式与基础版类似，进入 minimax 目录后执行 npm install 安装依赖，然后使用 npm run dev 启动开发服务器。后端部分基于 Go 语言开发，进入 backend 目录后执行 go run main.go 即可启动服务。Android 部分需要在 Android Studio 中打开 android 目录，或者使用命令行执行 ./gradlew assembleDebug 进行编译。
+
+详细的环境配置和运行说明请参考各个项目目录下的 README 文件。
+
+## 📁 项目结构
 
 ```
-src/
-├── components/       # 公共组件
-│   └── Layout.jsx   # 布局组件
-├── pages/           # 页面组件
-│   ├── Home.jsx     # 首页
-│   ├── Search.jsx   # 搜索页
-│   ├── Show.jsx     # 播客详情页
-│   ├── Episode.jsx  # 单集详情页
-│   ├── Profile.jsx  # 个人中心
-│   ├── Login.jsx    # 登录页
-│   └── ...
-├── services/        # API 服务
-│   └── api.js       # API 封装
-├── store/           # 状态管理
-│   └── authStore.js # 认证状态
-├── App.jsx          # 应用入口
-└── main.jsx         # 入口文件
+podcast/                          # GitHub 仓库根目录
+├── src/                          # 基础版 React 前端
+│   ├── components/
+│   ├── pages/
+│   ├── services/
+│   ├── store/
+│   └── utils/
+├── package.json
+├── README.md                     # 本文件（基础版说明）
+└── vite.config.js
+│
+└── minimax/                      # 升级版（完整三端架构）
+    ├── android/                  # Android 客户端
+    │   ├── app/
+    │   └── build.gradle.kts
+    │
+    ├── backend/                  # Go 后端服务
+    │   ├── main.go
+    │   └── go.mod
+    │
+    ├── src/                      # React 前端
+    │   ├── components/
+    │   ├── pages/
+    │   ├── services/
+    │   └── store/
+    │
+    ├── README.md                 # 升级版详细说明
+    └── package.json
 ```
 
-## 注意事项
+## 🏗️ 技术架构
 
-⚠️ **本项目仅供学习、研究使用，请遵守国家法律，严禁用于任何非法用途**
+### 基础版技术栈
 
-- 需要先运行 [xyz](https://github.com/ultrazg/xyz) API 服务
-- 登录功能可能已失效（参考 xyz 项目说明）
-- 请遵守相关法律法规和平台使用条款
+基础版采用现代化的 React 技术栈构建。前端使用 React 18 配合 Vite 构建工具，提供快速的热更新和开发体验。路由管理使用 React Router，状态管理采用轻量级的 Zustand。UI 样式使用 Tailwind CSS 实现响应式设计，HTTP 请求通过 Axios 发送。所有代码使用 ESLint 进行代码质量检查，确保代码风格一致。
 
-## 创作者
+### 升级版技术栈
 
-- [@jeffyaoliang](https://github.com/jeffyaoliang)
-- [@amyxiang12](https://github.com/amyxiang12)
+升级版采用三端分离的现代化架构。前端部分与基础版保持一致，使用相同的技术栈。后端服务使用 Go 语言开发，基于 Gin 框架构建高性能的 RESTful API，提供了 RSS 订阅解析、用户认证、播客数据获取等核心功能。Android 客户端采用 Kotlin 语言和 Jetpack Compose 框架开发，提供原生的移动端用户体验，支持后台播放、进度条拖动、系统通知栏控制等移动端特有功能。
 
-## 许可证
+## ✨ 功能特性
 
-MIT License
+### 共同功能
 
-## 相关项目
+两个版本都提供完整的播客基础功能。用户可以浏览热门播客推荐，按照分类筛选感兴趣的节目。搜索功能支持按标题、作者等关键词查找播客内容。订阅功能允许用户订阅喜欢的播客，自动获取更新提醒。播放功能支持在线流媒体播放，提供暂停、继续、进度调整等基本操作。个人中心展示收听历史、播放列表等用户数据。
 
-- [xyz - 小宇宙FM API](https://github.com/ultrazg/xyz)
+### 升级版特有功能
 
+除了基础版的全部功能外，升级版还提供了丰富的增强功能。Android 原生应用支持后台播放和系统通知栏控制，用户切换到其他应用时仍可继续收听播客。原生媒体引擎提供更流畅的播放体验，进度条支持拖动跳转，拖动完成时有系统提示音反馈。睡眠评分功能通过分析播客内容为用户提供个性化的睡眠建议。深色模式自动适配系统主题，夜间使用更加护眼。离线功能支持将播客下载到本地，无网络环境下也能收听。
+
+## 🔧 配置说明
+
+### 基础版配置
+
+基础版通过环境变量配置 API 地址。创建 .env 文件可以覆盖默认配置，VITE_API_BASE_URL 用于指定后端服务地址。开发阶段确保 xyz API 服务正常运行，应用会通过该服务获取播客数据。
+
+### 升级版配置
+
+升级版各端的配置相对独立。前端配置与基础版相同，通过 .env 文件设置 API 地址，默认指向本地 Go 后端服务。后端服务支持配置文件和环境变量配置，主要配置项包括服务监听端口、CORS 跨域白名单等。Android 应用需要网络权限才能访问后端 API，配置文件位于 android/app/src/main/res/values/ 目录下。
+
+## 📱 使用建议
+
+对于只需要 Web 端播客应用的用户，推荐使用基础版。基础版结构简单，部署方便，适合快速上手和二次开发。对于需要全平台播客体验的用户，推荐使用升级版。升级版提供了完整的 Android 原生应用，支持更多移动端特有功能，使用体验更加完善。对于开发者来说，可以根据需要选择学习其中一个版本，或者同时研究两个版本的实现差异。
+
+## 📝 开发日志
+
+项目经历了以下主要版本迭代：
+
+v1.0 版本是初始发布，实现了基础的播客浏览和播放功能。采用纯 React 前端架构，通过调用 xyz API 获取播客数据。该版本验证了项目理念的可行性，积累了一批早期用户。
+
+v2.0 版本进行了重大升级，新增了 Go 语言后端服务，采用 Gin 框架重构了原有的后端 API，性能得到显著提升。同时新增了 Android 原生客户端，使用 Kotlin 和 Jetpack Compose 开发，支持完整的播客播放和订阅功能。新增播放进度条和跳转功能，Android 端支持拖动进度条跳转播放位置，并提供声音反馈。新增睡眠评分功能，通过分析播客内容为用户提供个性化的睡眠建议。
+
+## 👥 创作者
+
+本项目由以下开发者共同完成：
+
+- [@jeffyaoliang](https://github.com/jeffyaoliang) - 项目发起人，主要开发
+- [@amyxiang12](https://github.com/amyxiang12) - 设计和开发
+
+## 📄 许可证
+
+本项目采用 MIT 许可证开源。
+
+## ⚠️ 注意事项
+
+本项目仅供学习、研究使用，请遵守国家相关法律法规，严禁用于任何非法用途。使用本项目时请注意以下几点：基础版需要配合 xyz API 服务才能正常使用完整功能；部分播客源可能因为网络原因无法访问；Android 应用需要 Android 8.0 或更高版本才能正常运行；升级版的后端服务需要 Go 1.19 或更高版本才能编译运行。
+
+## 📚 相关项目
+
+本项目基于以下开源项目构建：
+
+- [xyz - 小宇宙 FM API](https://github.com/ultrazg/xyz) - 提供播客数据 API
+- [Gin](https://github.com/gin-gonic/gin) - Go 后端框架
+- [Jetpack Compose](https://developer.android.com/compose) - Android UI 框架
+- [React](https://react.dev/) - 前端框架
+- [Vite](https://vitejs.dev/) - 构建工具

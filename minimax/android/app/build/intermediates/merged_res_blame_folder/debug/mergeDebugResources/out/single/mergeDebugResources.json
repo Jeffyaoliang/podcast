@@ -1,0 +1,26 @@
+[
+    {
+        "merged": "com.dreamecho.app-debug-55:/mipmap-xhdpi_ic_launcher.xml.flat",
+        "source": "com.dreamecho.app-main-57:/mipmap-xhdpi/ic_launcher.xml"
+    },
+    {
+        "merged": "com.dreamecho.app-debug-55:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.dreamecho.app-main-57:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.dreamecho.app-debug-55:/mipmap-hdpi_ic_launcher.xml.flat",
+        "source": "com.dreamecho.app-main-57:/mipmap-hdpi/ic_launcher.xml"
+    },
+    {
+        "merged": "com.dreamecho.app-debug-55:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "com.dreamecho.app-main-57:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.dreamecho.app-debug-55:/mipmap-xxhdpi_ic_launcher.xml.flat",
+        "source": "com.dreamecho.app-main-57:/mipmap-xxhdpi/ic_launcher.xml"
+    },
+    {
+        "merged": "com.dreamecho.app-debug-55:/mipmap-mdpi_ic_launcher.xml.flat",
+        "source": "com.dreamecho.app-main-57:/mipmap-mdpi/ic_launcher.xml"
+    }
+]

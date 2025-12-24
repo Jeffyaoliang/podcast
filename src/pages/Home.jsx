@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Play, Clock, Heart, Plus } from 'lucide-react'
+import { Play, Clock, Heart, Plus, X } from 'lucide-react'
 import { getPopularRSSFeeds, parseRSS } from '../services/rssService'
 import useRSSStore from '../store/rssStore'
 import { stripHTML } from '../utils/helpers'
@@ -9,7 +9,7 @@ export default function Home() {
   const [featured, setFeatured] = useState([])
   const [subscriptions, setSubscriptions] = useState([])
   const [loading, setLoading] = useState(true)
-  const { subscriptions: rssSubscriptions, addRecentFeed, recentFeeds } = useRSSStore()
+  const { subscriptions: rssSubscriptions, addRecentFeed, recentFeeds, blacklist } = useRSSStore()
 
   useEffect(() => {
     let cancelled = false
@@ -33,8 +33,11 @@ export default function Home() {
       // 加载热门 RSS 播客
       const popularFeeds = getPopularRSSFeeds()
       
+      // 过滤掉黑名单中的播客
+      const filteredFeeds = popularFeeds.filter(feed => !blacklist.includes(feed.rssUrl))
+      
       // 先从 recentFeeds 缓存中提取图片信息（如果存在）
-      const feedsWithCache = popularFeeds.map(feed => {
+      const feedsWithCache = filteredFeeds.map(feed => {
         const cached = recentFeeds.find(rf => rf.rssUrl === feed.rssUrl)
         if (cached && cached.image) {
           return {
@@ -45,7 +48,12 @@ export default function Home() {
             author: cached.author || feed.author,
           }
         }
-        return feed
+        // 如果feed本身有image属性（备用图片URL），使用它
+        // 这样可以确保即使RSS Feed中没有图片，也能显示备用图片
+        return {
+          ...feed,
+          image: feed.image || '', // 保留feed中定义的备用图片
+        }
       })
       
       // 先显示列表（包含缓存数据），不阻塞页面加载
@@ -73,7 +81,8 @@ export default function Home() {
             const podcast = await Promise.race([parseRSS(feed.rssUrl), timeoutPromise])
             const result = {
               ...feed,
-              image: podcast.image || '',
+              // 优先使用RSS Feed中的图片，如果没有则使用feed中定义的备用图片
+              image: podcast.image || feed.image || '',
               author: podcast.author || feed.author || '',
               title: podcast.title || feed.title,
               description: podcast.description || feed.description || '',
@@ -210,6 +219,8 @@ export default function Home() {
 
   const PodcastCard = ({ podcast }) => {
     const [imageError, setImageError] = useState(false)
+    const { addToBlacklist, isBlacklisted } = useRSSStore()
+    
     // 支持RSS播客（有rssUrl）和普通播客
     const linkUrl = podcast.rssUrl 
       ? `/rss/${encodeURIComponent(podcast.rssUrl)}`
@@ -218,11 +229,21 @@ export default function Home() {
     const imageUrl = podcast.image || podcast.cover
     const showImage = imageUrl && !imageError
     
+    const handleBlacklist = (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      if (podcast.rssUrl && confirm(`确定要拉黑"${podcast.title || podcast.name}"吗？拉黑后该播客将不再出现在列表中。`)) {
+        addToBlacklist(podcast.rssUrl)
+        alert('已拉黑该播客')
+      }
+    }
+    
     return (
-      <Link
-        to={linkUrl}
-        className="group bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden"
-      >
+      <div className="group bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden relative">
+        <Link
+          to={linkUrl}
+          className="block"
+        >
         <div className="relative aspect-square bg-gray-100 overflow-hidden">
           {/* 占位符背景层 */}
           <div className={`w-full h-full bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center absolute inset-0 ${showImage ? 'hidden' : ''}`}>
@@ -253,7 +274,18 @@ export default function Home() {
             <p className="text-xs text-gray-500 line-clamp-2">{stripHTML(podcast.description)}</p>
           )}
         </div>
-      </Link>
+        </Link>
+        {/* 拉黑按钮 - 仅对RSS播客显示 */}
+        {podcast.rssUrl && (
+          <button
+            onClick={handleBlacklist}
+            className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+            title="拉黑此播客"
+          >
+            <X className="h-4 w-4 text-white" />
+          </button>
+        )}
+      </div>
     )
   }
 
@@ -307,7 +339,7 @@ export default function Home() {
       {/* Hero Section */}
       <section className="text-center py-12">
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-          听播客，上小宇宙
+          听播客，上DreamEcho
         </h1>
         <p className="text-xl text-gray-600 mb-8">
           发现更多精彩内容
@@ -340,12 +372,10 @@ export default function Home() {
                         alt={feed.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         onError={(e) => {
-                          // 图片加载失败时，隐藏图片元素，显示占位符
-                          console.warn(`图片加载失败: ${feed.title}`, feed.image)
-                          e.target.style.display = 'none'
-                          const placeholder = e.target.nextElementSibling
-                          if (placeholder) {
-                            placeholder.style.display = 'flex'
+                          // 图片加载失败时，使用默认占位图片
+                          if (feed.image && !feed.image.includes('placeholder')) {
+                            // 使用一个美观的占位图片服务
+                            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(feed.title)}&background=6366f1&color=fff&size=300&bold=true&font-size=0.4`
                           }
                         }}
                         onLoad={() => {
@@ -359,9 +389,11 @@ export default function Home() {
                       </div>
                     </>
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-200">
-                      <Play className="h-12 w-12 text-primary-600 opacity-50" />
-                    </div>
+                    <img
+                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(feed.title)}&background=6366f1&color=fff&size=300&bold=true&font-size=0.4`}
+                      alt={feed.title}
+                      className="w-full h-full object-cover"
+                    />
                   )}
                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity flex items-center justify-center pointer-events-none">
                     <Play className="h-12 w-12 text-white opacity-0 group-hover:opacity-100 transition-opacity" />

@@ -159,7 +159,7 @@ const fetchRSS = async (url) => {
   
   // 检查是否是已知无法访问的域名
   if (url.includes('feeds.xyzfm.app')) {
-    throw new Error('小宇宙的 RSS 链接无法通过代理访问。请尝试使用其他 RSS 链接，如 BBC News 或 NPR News')
+    throw new Error('该 RSS 链接无法通过代理访问。请尝试使用其他 RSS 链接，如 BBC News 或 NPR News')
   }
   
   throw new Error(`无法获取RSS Feed，已尝试所有代理服务。该 RSS 链接可能暂时无法访问，请稍后重试或尝试使用其他 RSS 链接。\n\nRSS链接: ${url}`)
@@ -603,6 +603,7 @@ export const getPopularRSSFeeds = () => {
       title: '内核恐慌',
       rssUrl: 'https://pan.icu/feed',
       description: '一档号称硬核却没什么干货的信息技术主题娱乐节目',
+      // 图片URL将从RSS Feed中自动提取
     },
     {
       title: 'IT公论',
@@ -613,13 +614,14 @@ export const getPopularRSSFeeds = () => {
       title: 'Teahour',
       rssUrl: 'https://feeds.fireside.fm/teahour/rss',
       description: '聚焦于程序、创业以及一切 Geek 话题的中文播客',
+      // 图片URL将从RSS Feed中自动提取
     },
     
     // 注意：getpodcast.xyz 的RSS链接格式需要通过实际测试确认
     // 由于无法确认确切的URL格式，暂时不添加，避免大量无法访问的链接
     // 用户可以访问 https://getpodcast.xyz/ 查找具体播客的RSS链接，然后在搜索页面手动添加
     
-    // 注意：许多中文播客平台（如喜马拉雅、小宇宙、荔枝FM等）的RSS Feed
+    // 注意：许多中文播客平台（如喜马拉雅、荔枝FM等）的RSS Feed
     // 都有严格的CORS限制，无法通过浏览器代理访问
     // 建议用户在播客的官方网站查找RSS链接，或使用其他播客平台
     // 更多中文播客RSS链接可访问: https://getpodcast.xyz/
